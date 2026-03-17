@@ -38,6 +38,37 @@ export const sendEmail = async ({ to, subject, text, html }) => {
   }
 };
 
+// ── 🛠️ Background Email Queue singleton ──────────────────────────────────────────
+const emailQueue = [];
+let isProcessing = false;
+
+const processQueue = async () => {
+  if (isProcessing || emailQueue.length === 0) return;
+  isProcessing = true;
+
+  const { args, resolve } = emailQueue.shift();
+  try {
+    // Process the email
+    const res = await sendEmail(args);
+    resolve(res);
+  } catch (err) {
+    // sendEmail already catches inside, so this is just highly defensive
+    console.error('[EmailQueue] Processing exception:', err);
+    resolve(null);
+  } finally {
+    isProcessing = false;
+    // Breathe delay of 800ms between calls to avoid overlapping container TLS sockets
+    setTimeout(processQueue, 800);
+  }
+};
+
+export const queueEmail = (args) => {
+  return new Promise((resolve) => {
+    emailQueue.push({ args, resolve });
+    processQueue();
+  });
+};
+
 // helpers para notificaciones comunes
 export const sendWelcomeEmail = ({ name, email }) => {
   const subject = 'Bienvenido a Vegas Estudio';
@@ -47,7 +78,7 @@ export const sendWelcomeEmail = ({ name, email }) => {
     <p>Ahora puedes reservar servicios y gestionar tus citas fácilmente.</p>
     <p>Saludos,<br/>Equipo Vegas</p>
   `;
-  return sendEmail({ to: email, subject, html });
+  return queueEmail({ to: email, subject, html });
 };
 
 export const sendLoginNotification = ({ name, email }) => {
@@ -58,7 +89,7 @@ export const sendLoginNotification = ({ name, email }) => {
     <p>Si no fuiste tú, por favor contacta al soporte de inmediato.</p>
     <p>Gracias,<br/>Equipo Vegas</p>
   `;
-  return sendEmail({ to: email, subject, html });
+  return queueEmail({ to: email, subject, html });
 };
 
 export const sendBookingConfirmation = ({ name, email, appointment }) => {
@@ -76,7 +107,7 @@ export const sendBookingConfirmation = ({ name, email, appointment }) => {
     <p>Te notificaremos una vez que la cita sea confirmada.</p>
     <p>¡Gracias por elegirnos!<br/>Equipo Vegas</p>
   `;
-  return sendEmail({ to: email, subject, html });
+  return queueEmail({ to: email, subject, html });
 };
 
 export const sendAppointmentStatusEmail = ({ appointment }) => {
@@ -120,7 +151,7 @@ export const sendAppointmentStatusEmail = ({ appointment }) => {
     return;
   }
 
-  return sendEmail({ to: customer_email, subject, html });
+  return queueEmail({ to: customer_email, subject, html });
 };
 
 export const sendAdminNotification = ({ appointment, user }) => {
@@ -135,5 +166,5 @@ export const sendAdminNotification = ({ appointment, user }) => {
     </ul>
     <p>Por favor, inicia sesión en el panel de administración para confirmar o rechazar la solicitud.</p>
   `;
-  return sendEmail({ to: process.env.ADMIN_EMAIL, subject, html });
+  return queueEmail({ to: process.env.ADMIN_EMAIL, subject, html });
 };

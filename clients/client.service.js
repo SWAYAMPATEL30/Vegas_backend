@@ -284,24 +284,13 @@ export default {
       try {
         const { sendBookingConfirmation, sendAdminNotification } = await import('../utils/email.js');
         
-        console.log('[bookAppointment] Triggering background emails for:', user.email);
+        console.log('[bookAppointment] Queueing background emails for:', user.email);
 
-        // Run sequentially in background with a slight delay to clear network buffers
-        (async () => {
-          await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5s breathing room
-          
-          try {
-            await sendBookingConfirmation({ name: user.name, email: user.email, appointment });
-          } catch (e) {
-            console.error('[bookAppointment] Background sendBookingConfirmation failed:', e);
-          }
+        sendBookingConfirmation({ name: user.name, email: user.email, appointment })
+          .catch(e => console.error('[bookAppointment] Background confirmation queue failed:', e));
 
-          try {
-            await sendAdminNotification({ appointment, user });
-          } catch (e) {
-            console.error('[bookAppointment] Background sendAdminNotification failed:', e);
-          }
-        })();
+        sendAdminNotification({ appointment, user })
+          .catch(e => console.error('[bookAppointment] Background admin notification queue failed:', e));
 
       } catch (e) {
         console.error('[bookAppointment] dynamic import error:', e);
