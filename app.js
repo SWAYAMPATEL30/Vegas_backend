@@ -66,6 +66,21 @@ app.use('/auth', authRoutes);
 // ── Health Check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// ── Diagnostics (Temporary) ──────────────────────────────────────────────────
+app.get('/test-email', async (req, res) => {
+  try {
+    const { sendEmail } = await import('./utils/email.js');
+    const result = await sendEmail({
+      to: process.env.GMAIL_USER,
+      subject: 'Railway Diagnostics',
+      text: 'SMTP diagnostics from Railway node'
+    });
+    res.json({ success: true, message: 'Diagnose email triggered', checkLogs: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.use(errorMiddleware);
 
 export default app;
