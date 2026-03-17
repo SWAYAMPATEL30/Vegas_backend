@@ -1,16 +1,5 @@
 import nodemailer from 'nodemailer';
 
-// configure once using environment variables
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // IMPORTANT for cloud platforms
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD
-  }
-});
-
 // simple wrapper
 export const sendEmail = async ({ to, subject, text, html }) => {
   console.log(`[sendEmail] 📨 Initiating send... to=${to}, subject="${subject}"`);
@@ -19,6 +8,17 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     console.warn('[sendEmail] ⚠️ Gmail credentials not configured, skipping sendEmail');
     return;
   }
+
+  // create a fresh transporter per call to avoid stale connection pool/socket timeouts on cloud hosts
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // IMPORTANT for cloud platforms
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD
+    }
+  });
 
   try {
     console.log(`[sendEmail] 🚀 Calling transporter.sendMail for ${to}...`);
