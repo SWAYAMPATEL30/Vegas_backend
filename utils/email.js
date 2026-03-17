@@ -1,42 +1,37 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-// simple wrapper
+// simple wrapper using Resend API (HTTP-based, avoiding SMTP timeouts)
 export const sendEmail = async ({ to, subject, text, html }) => {
   console.log(`[sendEmail] 📨 Initiating send... to=${to}, subject="${subject}"`);
 
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn('[sendEmail] ⚠️ Gmail credentials not configured, skipping sendEmail');
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn('[sendEmail] ⚠️ RESEND_API_KEY not configured, skipping sendEmail');
     return;
   }
 
-  // create a fresh transporter per call with connectionTimeout and IPv4 forced
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Explicit STARTTLS for cloud scaling
-    connectionTimeout: 10000, // 10s max wait for connect
-    family: 4, // 🔌 Force IPv4 to bypass cloud IPv6 routing deadlocks
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
-    }
-  });
-
+  const resend = new Resend(apiKey);
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Vegas Estudio <onboarding@resend.dev>';
 
   try {
-    console.log(`[sendEmail] 🚀 Calling transporter.sendMail for ${to}...`);
-    const info = await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to,
-      subject,
-      text,
-      html
+    console.log(`[sendEmail] 🚀 Calling Resend API for ${to}...`);
+    
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: [to],
+      subject: subject,
+      html: html || text,
     });
 
-    console.log(`[sendEmail] ✅ Success! Email sent to ${to}: ${info.messageId}`);
-    return info;
+    if (error) {
+      console.error(`[sendEmail] ❌ Resend error for ${to}:`, error.message || error);
+      return null;
+    }
+
+    console.log(`[sendEmail] ✅ Success! Email sent via Resend to ${to}. ID: ${data?.id}`);
+    return data;
   } catch (err) {
-    console.error(`[sendEmail] ❌ Error caught for ${to}:`, err.message);
+    console.error(`[sendEmail] ❌ Exception caught for ${to}:`, err.message);
     // ✅ DO NOT throw
   }
 };
