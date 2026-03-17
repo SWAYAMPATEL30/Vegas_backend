@@ -283,10 +283,19 @@ export default {
       // send confirmation to user and notification to admin
       try {
         const { sendBookingConfirmation, sendAdminNotification } = await import('../utils/email.js');
-        sendBookingConfirmation({ name: user.name, email: user.email, appointment });
-        sendAdminNotification({ appointment, user });
+        
+        console.log('[bookAppointment] Sending emails to:', {
+          userEmail: user.email,
+          userName: user.name,
+          adminEmail: process.env.ADMIN_EMAIL
+        });
+
+        await sendBookingConfirmation({ name: user.name, email: user.email, appointment });
+        await sendAdminNotification({ appointment, user });
+        
+        console.log('[bookAppointment] Email send instructions finished executing');
       } catch (e) {
-        console.error('booking notification error', e);
+        console.error('[bookAppointment] booking notification error:', e);
       }
 
     return {

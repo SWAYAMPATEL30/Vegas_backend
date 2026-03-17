@@ -59,6 +59,8 @@ export const sendLoginNotification = ({ name, email }) => {
 };
 
 export const sendBookingConfirmation = ({ name, email, appointment }) => {
+  console.log('[sendBookingConfirmation] Details:', { name, email, appointment });
+  
   const subject = 'Solicitud de Cita Recibida';
   const html = `
     <h2>Hola ${name || 'allí'},</h2>
