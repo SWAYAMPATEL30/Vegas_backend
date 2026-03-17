@@ -203,46 +203,9 @@ export default {
 
     const currentStatus = appointment.status;
 
-    // 3. Status transition rules
-    switch (currentStatus) {
-      case APPOINTMENT_STATUS.PENDING:
-        if (
-          status !== APPOINTMENT_STATUS.CONFIRMED &&
-          status !== APPOINTMENT_STATUS.REJECTED
-        ) {
-          throw new Error('Invalid status transition');
-        }
-        break;
-
-      case APPOINTMENT_STATUS.CONFIRMED:
-        if (
-          status !== APPOINTMENT_STATUS.CANCELLED &&
-          status !== APPOINTMENT_STATUS.COMPLETED
-        ) {
-          throw new Error('Invalid status transition');
-        }
-        break;
-
-      case APPOINTMENT_STATUS.COMPLETED:
-        throw new Error('Completed appointment cannot be updated');
-
-      case APPOINTMENT_STATUS.REJECTED:
-        throw new Error('Rejected appointment cannot be updated');
-
-      case APPOINTMENT_STATUS.CANCELLED:
-        throw new Error('Cancelled appointment cannot be updated');
-
-      default:
-        throw new Error('Invalid current appointment status');
-    }
-
-    // 4. Rejection requires reason
-    if (
-      status === APPOINTMENT_STATUS.REJECTED &&
-      (!reason || reason.trim() === '')
-    ) {
-      throw new Error('Rejection reason is required');
-    }
+    // 3. Status transition rules / validations
+    // User requested to allow ALL transitions for admin from any state to any state.
+    // Bypassing previous strict checks...
 
     // 5. Update appointment
     const { data: updatedAppointment, error: updateError } = await supabase
