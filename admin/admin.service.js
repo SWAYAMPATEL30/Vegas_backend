@@ -84,6 +84,17 @@ export default {
       throw relationError;
     }
 
+    // 1b. Delete references in cart_items to prevent FK violations
+    const { error: cartError } = await supabase
+      .from('cart_items')
+      .delete()
+      .eq('service_id', id);
+
+    if (cartError) {
+      console.error('[deleteService] Error removing from cart_items:', cartError);
+      throw cartError;
+    }
+
     // 2. Delete the service itself
     const { error } = await supabase
       .from('services')
