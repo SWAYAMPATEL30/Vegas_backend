@@ -29,6 +29,9 @@ export default {
     }
 
     if (error) {
+      if (error.code === '23505' && error.message?.includes('email')) {
+        throw new Error('Este correo ya está registrado. Por favor, inicia sesión.');
+      }
       // Supabase returned an error object (e.g. network failure or constraint issue)
       console.error('Supabase returned error during registration:', error);
       // propagate the original error so middleware can inspect it if needed
@@ -88,7 +91,12 @@ export default {
 
     if (!user) throw new Error('Credenciales inválidas');
     const valid = await comparePassword(password, user.password_hash);
-    if (!valid) throw new Error('Contraseña incorrecta, por favor reingresa');
+    if (!valid) {
+      if (user.password_hash === 'GOOGLE_AUTH_MIGRATED') {
+        throw new Error('Has iniciado sesión con Google previamente. Usa el botón de Google para acceder.');
+      }
+      throw new Error('Contraseña incorrecta, por favor reingresa');
+    }
 
     const token = jwt.sign(
       {
