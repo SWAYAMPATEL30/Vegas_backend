@@ -10,6 +10,9 @@ import errorMiddleware from './middlewares/error.middleware.js';
 
 const app = express();
 
+// ── Proxy Settings (Needed for Render + Rate Limiting) ───────────────────────
+app.set('trust proxy', 1);
+
 // ── Security Headers ────────────────────────────────────────────────────────
 app.use(helmet());
 
