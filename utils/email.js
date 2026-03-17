@@ -9,12 +9,13 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     return;
   }
 
-  // create a fresh transporter per call with connectionTimeout
+  // create a fresh transporter per call with connectionTimeout and IPv4 forced
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false, // Explicit STARTTLS for cloud scaling
     connectionTimeout: 10000, // 10s max wait for connect
+    family: 4, // 🔌 Force IPv4 to bypass cloud IPv6 routing deadlocks
     auth: {
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASSWORD
