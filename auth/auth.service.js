@@ -71,12 +71,16 @@ export default {
   login: async ({ identifier, password }) => {
     let user, loginError;
     try {
-      const result = await supabase
-        .from('users')
-        .select('*')
-        .or(`email.eq.${identifier},phone.eq.${identifier}`)
-        .limit(1)
-        .maybeSingle();
+      let query = supabase.from('users').select('*');
+      
+      // Determine if identifier is an email (contains @) or a phone number
+      if (identifier.includes('@')) {
+        query = query.eq('email', identifier);
+      } else {
+        query = query.eq('phone', identifier);
+      }
+
+      const result = await query.limit(1).maybeSingle();
       user = result.data;
       loginError = result.error;
     } catch (err) {
@@ -90,11 +94,18 @@ export default {
     }
 
     if (!user) throw new Error('Credenciales inválidas');
+    
+    // Explicitly handle Google Auth users early
+    if (user.password_hash === 'GOOGLE_AUTH_MIGRATED') {
+      throw new Error('Has iniciado sesión con Google previamente. Usa el botón de Google para acceder.');
+    }
+
+    if (!user.password_hash) {
+      throw new Error('Cuenta sin contraseña configurada. Contacta a soporte.');
+    }
+
     const valid = await comparePassword(password, user.password_hash);
     if (!valid) {
-      if (user.password_hash === 'GOOGLE_AUTH_MIGRATED') {
-        throw new Error('Has iniciado sesión con Google previamente. Usa el botón de Google para acceder.');
-      }
       throw new Error('Contraseña incorrecta, por favor reingresa');
     }
 
