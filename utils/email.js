@@ -10,15 +10,22 @@ export const sendEmail = async ({ to, subject, text, html }) => {
   }
 
   // create a fresh transporter per call with connectionTimeout
+  // const transporter = nodemailer.createTransport({
+  //   host: 'smtp.gmail.com',
+  //   port: 587,
+  //   secure: false, // Explicit STARTTLS for cloud scaling
+  //   connectionTimeout: 10000, // 10s max wait for connect
+  //   auth: {
+  //     user: process.env.GMAIL_USER,
+  //     pass: process.env.GMAIL_APP_PASSWORD
+  //   }
+  // });
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Explicit STARTTLS for cloud scaling
-    connectionTimeout: 10000, // 10s max wait for connect
+    service: 'gmail',
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
-    }
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
   });
 
   try {
@@ -95,7 +102,7 @@ export const sendLoginNotification = ({ name, email }) => {
 
 export const sendBookingConfirmation = ({ name, email, appointment }) => {
   console.log('[sendBookingConfirmation] Details:', { name, email, appointment });
-  
+
   const subject = 'Solicitud de Cita Recibida';
   const html = `
     <h2>Hola ${name || 'allí'},</h2>
