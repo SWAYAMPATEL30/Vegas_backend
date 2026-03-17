@@ -1,0 +1,12 @@
+{
+  "primary": "#FDB400",
+  "secondary": "#9AC138",
+  "background": "#1A2722",
+  "foreground": "#FFFFFF",
+  "accent": "#7B9A2D",
+  "headerBg": "#1A2722",
+  "footerBg": "#1A2722",
+  "cardBg": "#1A2722",
+  "buttonText": "#1A2722",
+  "headingColor": "#FFFFFF"
+}

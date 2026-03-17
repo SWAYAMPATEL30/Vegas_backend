@@ -1,0 +1,42 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Nodemon
+.nodemon/
+
+# Build / coverage
+dist/
+build/
+coverage/
+
+# Uploads (if using multer / file uploads)
+uploads/
+
+# Supabase local (if used later)
+.supabase/
+
+# Temporary files
+tmp/
+temp/
