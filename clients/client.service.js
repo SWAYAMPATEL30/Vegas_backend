@@ -286,12 +286,20 @@ export default {
         
         console.log('[bookAppointment] Triggering background emails for:', user.email);
 
-        // Run in background so HTTP response returns instantly
-        sendBookingConfirmation({ name: user.name, email: user.email, appointment })
-          .catch(e => console.error('[bookAppointment] Background sendBookingConfirmation failed:', e));
+        // Run sequentially in background to avoid concurrent TLS socket overlapping timeouts
+        (async () => {
+          try {
+            await sendBookingConfirmation({ name: user.name, email: user.email, appointment });
+          } catch (e) {
+            console.error('[bookAppointment] Background sendBookingConfirmation failed:', e);
+          }
 
-        sendAdminNotification({ appointment, user })
-          .catch(e => console.error('[bookAppointment] Background sendAdminNotification failed:', e));
+          try {
+            await sendAdminNotification({ appointment, user });
+          } catch (e) {
+            console.error('[bookAppointment] Background sendAdminNotification failed:', e);
+          }
+        })();
 
       } catch (e) {
         console.error('[bookAppointment] dynamic import error:', e);
