@@ -286,8 +286,10 @@ export default {
         
         console.log('[bookAppointment] Triggering background emails for:', user.email);
 
-        // Run sequentially in background to avoid concurrent TLS socket overlapping timeouts
+        // Run sequentially in background with a slight delay to clear network buffers
         (async () => {
+          await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5s breathing room
+          
           try {
             await sendBookingConfirmation({ name: user.name, email: user.email, appointment });
           } catch (e) {
