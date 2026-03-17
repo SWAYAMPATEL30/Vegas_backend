@@ -13,12 +13,15 @@ const transporter = nodemailer.createTransport({
 
 // simple wrapper
 export const sendEmail = async ({ to, subject, text, html }) => {
+  console.log(`[sendEmail] 📨 Initiating send... to=${to}, subject="${subject}"`);
+
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn('Gmail credentials not configured, skipping sendEmail');
+    console.warn('[sendEmail] ⚠️ Gmail credentials not configured, skipping sendEmail');
     return;
   }
 
   try {
+    console.log(`[sendEmail] 🚀 Calling transporter.sendMail for ${to}...`);
     const info = await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to,
@@ -27,10 +30,10 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       html
     });
 
-    console.log(`email sent to ${to}: ${info.messageId}`);
+    console.log(`[sendEmail] ✅ Success! Email sent to ${to}: ${info.messageId}`);
     return info;
   } catch (err) {
-    console.error('sendEmail error (ignored)', err.message);
+    console.error(`[sendEmail] ❌ Error caught for ${to}:`, err.message);
     // ✅ DO NOT throw
   }
 };
