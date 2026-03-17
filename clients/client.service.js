@@ -286,13 +286,16 @@ export default {
         
         console.log('[bookAppointment] Queueing background emails for:', user.email);
 
-        // Notify Admin First
-        sendAdminNotification({ appointment, user })
-          .catch(e => console.error('[bookAppointment] Background admin notification queue failed:', e));
+        // Wait 1.5s before enqueuing to let Supabase DB calls fully close and release socket descriptors
+        setTimeout(() => {
+          // Notify Admin First
+          sendAdminNotification({ appointment, user })
+            .catch(e => console.error('[bookAppointment] Background admin notification queue failed:', e));
 
-        // Notify User Second
-        sendBookingConfirmation({ name: user.name, email: user.email, appointment })
-          .catch(e => console.error('[bookAppointment] Background confirmation queue failed:', e));
+          // Notify User Second
+          sendBookingConfirmation({ name: user.name, email: user.email, appointment })
+            .catch(e => console.error('[bookAppointment] Background confirmation queue failed:', e));
+        }, 1500);
 
       } catch (e) {
         console.error('[bookAppointment] dynamic import error:', e);
