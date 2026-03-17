@@ -286,11 +286,13 @@ export default {
         
         console.log('[bookAppointment] Queueing background emails for:', user.email);
 
-        sendBookingConfirmation({ name: user.name, email: user.email, appointment })
-          .catch(e => console.error('[bookAppointment] Background confirmation queue failed:', e));
-
+        // Notify Admin First
         sendAdminNotification({ appointment, user })
           .catch(e => console.error('[bookAppointment] Background admin notification queue failed:', e));
+
+        // Notify User Second
+        sendBookingConfirmation({ name: user.name, email: user.email, appointment })
+          .catch(e => console.error('[bookAppointment] Background confirmation queue failed:', e));
 
       } catch (e) {
         console.error('[bookAppointment] dynamic import error:', e);

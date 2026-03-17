@@ -10,23 +10,17 @@ export const sendEmail = async ({ to, subject, text, html }) => {
   }
 
   // create a fresh transporter per call with connectionTimeout
-  // const transporter = nodemailer.createTransport({
-  //   host: 'smtp.gmail.com',
-  //   port: 587,
-  //   secure: false, // Explicit STARTTLS for cloud scaling
-  //   connectionTimeout: 10000, // 10s max wait for connect
-  //   auth: {
-  //     user: process.env.GMAIL_USER,
-  //     pass: process.env.GMAIL_APP_PASSWORD
-  //   }
-  // });
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Explicit STARTTLS for cloud scaling
+    connectionTimeout: 10000, // 10s max wait for connect
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
+      pass: process.env.GMAIL_APP_PASSWORD
+    }
   });
+
 
   try {
     console.log(`[sendEmail] 🚀 Calling transporter.sendMail for ${to}...`);
@@ -86,7 +80,7 @@ export const sendWelcomeEmail = ({ name, email }) => {
     <p>Ahora puedes reservar servicios y gestionar tus citas fácilmente.</p>
     <p>Saludos,<br/>Equipo Vegas</p>
   `;
-  return queueEmail({ to: email, subject, html });
+  return queueEmail({ to: (email || '').trim(), subject, html });
 };
 
 export const sendLoginNotification = ({ name, email }) => {
@@ -97,7 +91,7 @@ export const sendLoginNotification = ({ name, email }) => {
     <p>Si no fuiste tú, por favor contacta al soporte de inmediato.</p>
     <p>Gracias,<br/>Equipo Vegas</p>
   `;
-  return queueEmail({ to: email, subject, html });
+  return queueEmail({ to: (email || '').trim(), subject, html });
 };
 
 export const sendBookingConfirmation = ({ name, email, appointment }) => {
@@ -115,7 +109,7 @@ export const sendBookingConfirmation = ({ name, email, appointment }) => {
     <p>Te notificaremos una vez que la cita sea confirmada.</p>
     <p>¡Gracias por elegirnos!<br/>Equipo Vegas</p>
   `;
-  return queueEmail({ to: email, subject, html });
+  return queueEmail({ to: (email || '').trim(), subject, html });
 };
 
 export const sendAppointmentStatusEmail = ({ appointment }) => {
@@ -159,7 +153,7 @@ export const sendAppointmentStatusEmail = ({ appointment }) => {
     return;
   }
 
-  return queueEmail({ to: customer_email, subject, html });
+  return queueEmail({ to: (customer_email || '').trim(), subject, html });
 };
 
 export const sendAdminNotification = ({ appointment, user }) => {
@@ -174,5 +168,6 @@ export const sendAdminNotification = ({ appointment, user }) => {
     </ul>
     <p>Por favor, inicia sesión en el panel de administración para confirmar o rechazar la solicitud.</p>
   `;
-  return queueEmail({ to: process.env.ADMIN_EMAIL, subject, html });
+  const adminEmail = (process.env.ADMIN_EMAIL || '').trim();
+  return queueEmail({ to: adminEmail, subject, html });
 };
