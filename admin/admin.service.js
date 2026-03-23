@@ -41,6 +41,26 @@ export default {
     return data;
   },
 
+  getServices: async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    const priorityNames = ["Clásico", "Vegas Pro", "Premium"];
+    return data.sort((a, b) => {
+      const aIdx = priorityNames.indexOf(a.name);
+      const bIdx = priorityNames.indexOf(b.name);
+
+      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+      if (aIdx !== -1) return -1;
+      if (bIdx !== -1) return 1;
+      return 0;
+    });
+  },
+
   addService: async (payload) => {
     const { image_url, ...rest } = payload;
     const { data, error } = await supabase

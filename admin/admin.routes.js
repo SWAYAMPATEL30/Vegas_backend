@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(auth, admin);
 
 router.get('/appointments', controller.getAppointments);
+router.get('/services', controller.getServices);
 router.post('/services', controller.addService);
 router.put('/services/:id', controller.updateService);
 router.delete('/services/:id', controller.deleteService);

@@ -5,6 +5,10 @@ export default {
     res.json(await service.getAppointments());
   },
 
+  getServices: async (req, res) => {
+    res.json(await service.getServices());
+  },
+
   addService: async (req, res) => {
     res.json(await service.addService(req.body));
   },
