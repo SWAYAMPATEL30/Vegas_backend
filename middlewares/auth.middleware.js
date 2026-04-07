@@ -25,7 +25,9 @@ export default async function auth(req, res, next) {
       };
       return next();
     } catch (err) {
-      console.error('[auth] Supabase getUser failed stack:', err.stack || err);
+      if (err.name !== 'JsonWebTokenError') {
+        console.error('[auth] Supabase getUser failed:', err.message);
+      }
       res.status(401).json({ message: 'Invalid token' });
     }
   }
