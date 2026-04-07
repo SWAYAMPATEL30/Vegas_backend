@@ -18,10 +18,16 @@ export default {
 
     if (!data) return [];
 
+    // Map DB fields to frontend fields
+    const mappedData = data.map(s => ({
+      ...s,
+      image_url: s.image
+    }));
+
     const priorityNames = ["Clásico", "Vegas Pro", "Premium"];
     
     // Sort logic: priority services first in specified order, then others by created_at
-    return data.sort((a, b) => {
+    return mappedData.sort((a, b) => {
       const aIdx = priorityNames.indexOf(a.name);
       const bIdx = priorityNames.indexOf(b.name);
 

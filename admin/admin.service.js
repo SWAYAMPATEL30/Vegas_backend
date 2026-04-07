@@ -49,8 +49,14 @@ export default {
 
     if (error) throw error;
 
+    // The DB already uses duration_minutes, descriptions, and image
+    const mappedData = data.map(s => ({
+      ...s,
+      image_url: s.image
+    }));
+
     const priorityNames = ["Clásico", "Vegas Pro", "Premium"];
-    return data.sort((a, b) => {
+    return mappedData.sort((a, b) => {
       const aIdx = priorityNames.indexOf(a.name);
       const bIdx = priorityNames.indexOf(b.name);
 
@@ -63,32 +69,49 @@ export default {
 
   addService: async (payload) => {
     const { image_url, ...rest } = payload;
+    
+    // Ensure we map image_url to image correctly for the DB
+    const insertData = {
+      ...rest,
+      image: image_url || null
+    };
+
+    console.log('[addService] payload:', JSON.stringify(insertData));
+
     const { data, error } = await supabase
       .from('services')
-      .insert({
-        ...rest,
-        image: image_url || null
-      })
+      .insert(insertData)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[addService] Supabase error:', error);
+      throw error;
+    }
     return data;
   },
 
   updateService: async (id, payload) => {
     const { image_url, ...rest } = payload;
+    
+    const updateData = {
+      ...rest,
+      ...(image_url !== undefined && { image: image_url })
+    };
+
+    console.log('[updateService] id:', id, 'payload:', JSON.stringify(updateData));
+
     const { data, error } = await supabase
       .from('services')
-      .update({
-        ...rest,
-        ...(image_url !== undefined && { image: image_url })
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[updateService] Supabase error:', error);
+      throw error;
+    }
     return data;
   },
 
