@@ -7,6 +7,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const THEME_FILE = path.join(__dirname, '..', 'theme.json');
+const FEATURED_FILE = path.join(__dirname, '..', 'featured.json');
+
+const readFeaturedIds = async () => {
+  try {
+    const raw = await fs.readFile(FEATURED_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+};
 
 export default {
   getServices: async () => {
@@ -26,22 +36,10 @@ export default {
   },
 
   // Returns the admin-chosen featured services for the home page
-  // Falls back to combo services first, then individual if needed
+  // Uses featured.json file (no DB column needed)
   getFeaturedServices: async () => {
-    // Try to get admin-marked featured services first
-    const { data: featured } = await supabase
-      .from('services')
-      .select('*')
-      .eq('is_active', true)
-      .eq('is_featured', true)
-      .order('created_at', { ascending: true })
-      .limit(3);
+    const featuredIds = await readFeaturedIds();
 
-    if (featured && featured.length > 0) {
-      return featured.map(s => ({ ...s, image_url: s.image }));
-    }
-
-    // Fallback: prefer combo/package services first, then individual — always return 3
     const { data: allServices } = await supabase
       .from('services')
       .select('*')
@@ -50,11 +48,21 @@ export default {
 
     if (!allServices || allServices.length === 0) return [];
 
+    // If admin has selected featured services, return those (up to 3)
+    if (featuredIds.length > 0) {
+      const featured = allServices
+        .filter(s => featuredIds.includes(s.id))
+        .slice(0, 3);
+      if (featured.length > 0) {
+        return featured.map(s => ({ ...s, image_url: s.image, is_featured: true }));
+      }
+    }
+
+    // Fallback: combos first, then individual
     const combos = allServices.filter(s => s.type === 'combo');
     const individuals = allServices.filter(s => s.type !== 'combo');
     const top3 = [...combos, ...individuals].slice(0, 3);
-
-    return top3.map(s => ({ ...s, image_url: s.image }));
+    return top3.map(s => ({ ...s, image_url: s.image, is_featured: false }));
   },
 
   getTheme: async () => {

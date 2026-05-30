@@ -7,6 +7,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const THEME_FILE = path.join(__dirname, '..', 'theme.json');
+const FEATURED_FILE = path.join(__dirname, '..', 'featured.json');
+
+const readFeaturedIds = async () => {
+  try {
+    const raw = await fs.readFile(FEATURED_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+};
 
 export default {
   getAppointments: async () => {
@@ -49,10 +59,14 @@ export default {
 
     if (error) throw error;
 
-    // The DB already uses duration_minutes, descriptions, and image
+    // Read featured IDs from file
+    const featuredIds = await readFeaturedIds();
+
+    // Map DB fields and inject is_featured flag
     const mappedData = data.map(s => ({
       ...s,
-      image_url: s.image
+      image_url: s.image,
+      is_featured: featuredIds.includes(s.id)
     }));
 
     const priorityNames = ["Clásico", "Vegas Pro", "Premium"];
@@ -116,18 +130,25 @@ export default {
   },
 
   toggleFeatured: async (id, is_featured) => {
-    const { data, error } = await supabase
-      .from('services')
-      .update({ is_featured })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[toggleFeatured] Supabase error:', error);
-      throw error;
+    // Use file-based storage (featured.json) — no DB column required
+    const currentIds = await readFeaturedIds();
+    let updatedIds;
+    if (is_featured) {
+      // Add to featured list (max 3)
+      if (!currentIds.includes(id)) {
+        updatedIds = [...currentIds, id].slice(-3); // keep last 3 if overflow
+      } else {
+        updatedIds = currentIds;
+      }
+    } else {
+      // Remove from featured list
+      updatedIds = currentIds.filter(fid => fid !== id);
     }
-    return { ...data, image_url: data.image };
+    await fs.writeFile(FEATURED_FILE, JSON.stringify(updatedIds, null, 2));
+    // Return the service with updated is_featured flag
+    const { data, error } = await supabase.from('services').select('*').eq('id', id).single();
+    if (error) throw error;
+    return { ...data, image_url: data.image, is_featured };
   },
 
   deleteService: async (id) => {
