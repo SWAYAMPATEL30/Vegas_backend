@@ -12,7 +12,9 @@ router.get('/services', controller.getServices);
 router.post('/services', controller.addService);
 router.put('/services/:id', controller.updateService);
 router.delete('/services/:id', controller.deleteService);
+router.patch('/services/:id/featured', controller.toggleFeatured);
 router.post('/services/upload', controller.uploadImage);
+
 
 router.post('/block-slot', controller.blockSlot);
 router.delete('/block-slot/:id', controller.deleteBlockedSlot);

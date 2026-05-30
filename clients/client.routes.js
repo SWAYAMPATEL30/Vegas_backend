@@ -5,6 +5,8 @@ import controller from './client.controller.js';
 const router = express.Router();
 
 router.get('/services', controller.getServices);
+router.get('/services/featured', controller.getFeaturedServices);
+
 router.get('/booking-status', controller.getBookingStatus);
 router.get('/block-slots', controller.getBlockedSlots);
 

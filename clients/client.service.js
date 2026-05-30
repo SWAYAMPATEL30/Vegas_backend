@@ -19,24 +19,37 @@ export default {
     if (!data) return [];
 
     // Map DB fields to frontend fields
-    const mappedData = data.map(s => ({
+    return data.map(s => ({
       ...s,
       image_url: s.image
     }));
+  },
 
-    const priorityNames = ["Clásico", "Vegas Pro", "Premium"];
-    
-    // Sort logic: priority services first in specified order, then others by created_at
-    return mappedData.sort((a, b) => {
-      const aIdx = priorityNames.indexOf(a.name);
-      const bIdx = priorityNames.indexOf(b.name);
+  // Returns the admin-chosen featured services for the home page
+  // Falls back to first 3 active services if none have been marked featured yet
+  getFeaturedServices: async () => {
+    const { data: featured } = await supabase
+      .from('services')
+      .select('*')
+      .eq('is_active', true)
+      .eq('is_featured', true)
+      .order('created_at', { ascending: true })
+      .limit(3);
 
-      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-      if (aIdx !== -1) return -1;
-      if (bIdx !== -1) return 1;
-      
-      return 0; // Maintain created_at order from query
-    });
+    if (featured && featured.length > 0) {
+      return featured.map(s => ({ ...s, image_url: s.image }));
+    }
+
+    // Fallback: return first 3 active services
+    const { data: fallback } = await supabase
+      .from('services')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .limit(3);
+
+    if (!fallback) return [];
+    return fallback.map(s => ({ ...s, image_url: s.image }));
   },
 
   getTheme: async () => {

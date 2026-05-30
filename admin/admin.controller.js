@@ -21,6 +21,11 @@ export default {
     res.json(await service.deleteService(req.params.id));
   },
 
+  toggleFeatured: async (req, res) => {
+    const { is_featured } = req.body;
+    res.json(await service.toggleFeatured(req.params.id, is_featured));
+  },
+
   uploadImage: async (req, res, next) => {
     try {
       const { fileName, fileType, content } = req.body;

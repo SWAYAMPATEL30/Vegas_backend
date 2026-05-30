@@ -115,7 +115,23 @@ export default {
     return data;
   },
 
+  toggleFeatured: async (id, is_featured) => {
+    const { data, error } = await supabase
+      .from('services')
+      .update({ is_featured })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[toggleFeatured] Supabase error:', error);
+      throw error;
+    }
+    return { ...data, image_url: data.image };
+  },
+
   deleteService: async (id) => {
+
     // 1. Delete references in appointment_services first due to foreign key constraint
     const { error: relationError } = await supabase
       .from('appointment_services')

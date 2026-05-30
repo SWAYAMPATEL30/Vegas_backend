@@ -5,6 +5,10 @@ export default {
     res.json(await service.getServices());
   },
 
+  getFeaturedServices: async (req, res) => {
+    res.json(await service.getFeaturedServices());
+  },
+
   getBookingStatus: async (req, res) => {
     res.json({ enabled: await service.getBookingStatus() });
   },
