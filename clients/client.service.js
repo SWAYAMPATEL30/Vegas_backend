@@ -26,8 +26,9 @@ export default {
   },
 
   // Returns the admin-chosen featured services for the home page
-  // Falls back to first 3 active services if none have been marked featured yet
+  // Falls back to combo services first, then individual if needed
   getFeaturedServices: async () => {
+    // Try to get admin-marked featured services first
     const { data: featured } = await supabase
       .from('services')
       .select('*')
@@ -40,16 +41,20 @@ export default {
       return featured.map(s => ({ ...s, image_url: s.image }));
     }
 
-    // Fallback: return first 3 active services
-    const { data: fallback } = await supabase
+    // Fallback: prefer combo/package services first, then individual — always return 3
+    const { data: allServices } = await supabase
       .from('services')
       .select('*')
       .eq('is_active', true)
-      .order('created_at', { ascending: true })
-      .limit(3);
+      .order('created_at', { ascending: true });
 
-    if (!fallback) return [];
-    return fallback.map(s => ({ ...s, image_url: s.image }));
+    if (!allServices || allServices.length === 0) return [];
+
+    const combos = allServices.filter(s => s.type === 'combo');
+    const individuals = allServices.filter(s => s.type !== 'combo');
+    const top3 = [...combos, ...individuals].slice(0, 3);
+
+    return top3.map(s => ({ ...s, image_url: s.image }));
   },
 
   getTheme: async () => {
